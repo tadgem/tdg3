@@ -88,8 +88,8 @@ if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
     # link with WebGL2
     target_link_options(demo PRIVATE -sUSE_WEBGL2=1)
     # WASM+JS size optimizations
-    target_compile_options(demo PRIVATE -sNO_FILESYSTEM=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASSERTIONS=0 -sMALLOC=emmalloc --closure=1)
-    target_link_options(demo PRIVATE -sNO_FILESYSTEM=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASSERTIONS=0 -sMALLOC=emmalloc --closure=1)
+    target_compile_options(demo PRIVATE -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASSERTIONS=1 -sMALLOC=emmalloc --closure=1)
+    target_link_options(demo PRIVATE -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASSERTIONS=1 -sMALLOC=emmalloc --closure=1)
 else()
     target_link_libraries(demo SDL2-static SDL2_mixer)
 endif()

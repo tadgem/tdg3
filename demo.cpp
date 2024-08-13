@@ -24,9 +24,9 @@
 #include "sokol_imgui.h"
 #define SOKOL_FETCH_IMPL
 #include "sokol/sokol_fetch.h"
-
 #include "SDL.h"
 #include "SDL_mixer.h"
+
 
 static struct {
     sg_pass_action  pass_action;
@@ -34,6 +34,8 @@ static struct {
     FONScontext*    fons_context;
     int             font_default = FONS_INVALID;
     uint8_t         font_default_data[256 * 1024];
+    Mix_Chunk*      pedro_sample;
+    bool            audio_initialized = false;
 } state;
 
 static void font_default_loaded(const sfetch_response_t* response) {
@@ -41,23 +43,31 @@ static void font_default_loaded(const sfetch_response_t* response) {
       state.font_default = fonsAddFontMem(state.fons_context, "default", (unsigned char*)response->data.ptr, (int)response->data.size, false);
     }
 }
-
-static void init() {
+static void init_sdl_mixer()
+{
+    std::cout << "TDG3 : Initializing SDL Audio" << std::endl;
     if(SDL_Init( SDL_INIT_AUDIO ) == -1 )
     {
       return;
     }
 
-    if(Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 )
+    std::cout << "TDG3 : Initializing SDL Mixer" << std::endl;
+    int chosen_device = Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) ;
+    Mix_Init(MIX_INIT_WAVPACK);
+    if(chosen_device == -1 )
     {
       return;
     }
-    auto music = Mix_LoadWAV( "../assets/sounds/pedro.wav" );
+    std::cout << "TDG3 : Selected Audio Device : " << SDL_GetAudioDeviceName(chosen_device, 0) << std::endl;
 
-    if( Mix_PlayChannel( -1, music, 0 ) == -1 )
-    {
-      return;
-    }
+    std::cout << "TDG3 : Loading Pedro Audio" << std::endl;
+    state.pedro_sample = Mix_LoadWAV( "../assets/sounds/pedro.wav" );
+}
+
+static void init() {
+#ifndef __EMSCRIPTEN__
+    init_sdl_mixer();
+#endif
     auto sokol_gfx_description = sg_desc {};
 
     sokol_gfx_description.environment = sglue_environment();
@@ -85,6 +95,7 @@ static void init() {
 
     state.fons_context = sfons_create(&font_stash_desc);
 
+    std::cout << "TDG3 : Initializing sokol-fetch" << std::endl;
     sfetch_desc_t fetch_setup_desc {};
     fetch_setup_desc.num_channels = 1;
     fetch_setup_desc.num_lanes = 4;
@@ -98,6 +109,7 @@ static void init() {
       exit(-1);
     }
 
+    std::cout << "TDG3 : Requesting font asset" << std::endl;
     sfetch_request_t request {};
     request.path = "../assets/fonts/Zain-Black.ttf";
     request.callback = font_default_loaded;
@@ -278,6 +290,11 @@ static void frame() {
     ImGui::SetNextWindowSize({400, 400}, ImGuiCond_Once);
     ImGui::Begin("Sokol ImGui", 0, ImGuiWindowFlags_None);
     ImGui::ColorEdit3("Background", &state.pass_action.colors[0].clear_value.r, ImGuiColorEditFlags_None);
+    if(ImGui::Button("Play Pedro!"))
+    {
+      std::cout << "TDG3 : Playing Pedro"<< std::endl;
+      Mix_PlayChannel( -1, state.pedro_sample, 0 );
+    }
     ImGui::End();
 
     // Draw an animated rectangle that rotates and changes its colors.
@@ -310,6 +327,13 @@ static void cleanup() {
 
 static void event(const sapp_event* ev) {
     simgui_handle_event(ev);
+    if(ev->type == SAPP_EVENTTYPE_FOCUSED && !state.audio_initialized)
+    {
+      std::cout << "Gained Focus" << std::endl;
+#ifdef __EMSCRIPTEN__
+      init_sdl_mixer();
+#endif
+    }
 }
 
 sapp_desc sokol_main(int argc, char* argv[]) {
