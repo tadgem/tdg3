@@ -964,6 +964,7 @@
 #endif
 #ifndef SOKOL_ASSERT
 #include <assert.h>
+#include <cstdio>
 #define SOKOL_ASSERT(c) assert(c)
 #endif
 
@@ -3342,6 +3343,10 @@
 
     static void _sgl_draw(_sgl_context_t* ctx, int layer_id) {
       SOKOL_ASSERT(ctx);
+      if(ctx->error != SGL_NO_ERROR)
+      {
+        printf("Error drawing SGL");
+      }
       if ((ctx->error == SGL_NO_ERROR) && (ctx->vertices.next > 0) && (ctx->commands.next > 0)) {
         sg_push_debug_group("sokol-gl");
 

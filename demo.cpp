@@ -1,9 +1,12 @@
 #include "sokol_app.h"
 #ifdef WIN32
 #define SOKOL_D3D11
-#elifdef __EMSCRIPTEN__
+#else
+#ifdef __EMSCRIPTEN__
 #define SOKOL_GLES3
 #endif
+#endif
+
 #include "sokol_gfx.h"
 #include "sokol_log.h"
 #include "sokol_glue.h"
@@ -20,7 +23,7 @@
 
 static struct {
     sg_pass_action pass_action;
-    sgl_pipeline  depth_test_pip;
+    sgl_pipeline    depth_test_pip;
 } state;
 
 static void init() {
@@ -36,6 +39,7 @@ static void init() {
     sgl_setup(sgl_gfx_description);
 
     auto sgl_pipeline_desc = sg_pipeline_desc{};
+    sgl_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
     sgl_pipeline_desc.depth.write_enabled = true;
     sgl_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
 
@@ -48,43 +52,93 @@ static void init() {
     // initial clear color
     auto pass_action = sg_pass_action {};
     pass_action.colors[0] = { SG_LOADACTION_CLEAR, SG_STOREACTION_STORE,  { 0.0f, 0.5f, 1.0f, 1.0 } };
+    pass_action.depth = {SG_LOADACTION_CLEAR, SG_STOREACTION_STORE, 1.0f};
     state.pass_action = pass_action;
 }
-
-static void grid(float y, uint32_t frame_count) {
-    const int num = 64;
-    const float dist = 4.0f;
-    const float z_offset = (dist / 8) * (frame_count & 7);
-    sgl_begin_lines();
-    for (int i = 0; i < num; i++) {
-      float x = i * dist - num * dist * 0.5f;
-      sgl_v3f(x, y, -num * dist);
-      sgl_v3f(x, y, 0.0f);
-    }
-    for (int i = 0; i < num; i++) {
-      float z = z_offset + i * dist - num * dist;
-      sgl_v3f(-num * dist * 0.5f, y, z);
-      sgl_v3f(num * dist * 0.5f, y, z);
-    }
+static void cube(void) {
+    sgl_begin_quads();
+    sgl_c3f(1.0f, 0.0f, 0.0f);
+    sgl_v3f_t2f(-1.0f,  1.0f, -1.0f, -1.0f,  1.0f);
+    sgl_v3f_t2f( 1.0f,  1.0f, -1.0f,  1.0f,  1.0f);
+    sgl_v3f_t2f( 1.0f, -1.0f, -1.0f,  1.0f, -1.0f);
+    sgl_v3f_t2f(-1.0f, -1.0f, -1.0f, -1.0f, -1.0f);
+    sgl_c3f(0.0f, 1.0f, 0.0f);
+    sgl_v3f_t2f(-1.0f, -1.0f,  1.0f, -1.0f,  1.0f);
+    sgl_v3f_t2f( 1.0f, -1.0f,  1.0f,  1.0f,  1.0f);
+    sgl_v3f_t2f( 1.0f,  1.0f,  1.0f,  1.0f, -1.0f);
+    sgl_v3f_t2f(-1.0f,  1.0f,  1.0f, -1.0f, -1.0f);
+    sgl_c3f(0.0f, 0.0f, 1.0f);
+    sgl_v3f_t2f(-1.0f, -1.0f,  1.0f, -1.0f,  1.0f);
+    sgl_v3f_t2f(-1.0f,  1.0f,  1.0f,  1.0f,  1.0f);
+    sgl_v3f_t2f(-1.0f,  1.0f, -1.0f,  1.0f, -1.0f);
+    sgl_v3f_t2f(-1.0f, -1.0f, -1.0f, -1.0f, -1.0f);
+    sgl_c3f(1.0f, 0.5f, 0.0f);
+    sgl_v3f_t2f(1.0f, -1.0f,  1.0f, -1.0f,   1.0f);
+    sgl_v3f_t2f(1.0f, -1.0f, -1.0f,  1.0f,   1.0f);
+    sgl_v3f_t2f(1.0f,  1.0f, -1.0f,  1.0f,  -1.0f);
+    sgl_v3f_t2f(1.0f,  1.0f,  1.0f, -1.0f,  -1.0f);
+    sgl_c3f(0.0f, 0.5f, 1.0f);
+    sgl_v3f_t2f( 1.0f, -1.0f, -1.0f, -1.0f,  1.0f);
+    sgl_v3f_t2f( 1.0f, -1.0f,  1.0f,  1.0f,  1.0f);
+    sgl_v3f_t2f(-1.0f, -1.0f,  1.0f,  1.0f, -1.0f);
+    sgl_v3f_t2f(-1.0f, -1.0f, -1.0f, -1.0f, -1.0f);
+    sgl_c3f(1.0f, 0.0f, 0.5f);
+    sgl_v3f_t2f(-1.0f,  1.0f, -1.0f, -1.0f,  1.0f);
+    sgl_v3f_t2f(-1.0f,  1.0f,  1.0f,  1.0f,  1.0f);
+    sgl_v3f_t2f( 1.0f,  1.0f,  1.0f,  1.0f, -1.0f);
+    sgl_v3f_t2f( 1.0f,  1.0f, -1.0f, -1.0f, -1.0f);
     sgl_end();
 }
 
+static void draw_cubes(const float t) {
+    static float rot[2] = { 0.0f, 0.0f };
+    rot[0] += 1.0f * t;
+    rot[1] += 2.0f * t;
+
+    sgl_defaults();
+    sgl_load_pipeline(state.depth_test_pip);
+
+    sgl_matrix_mode_projection();
+    sgl_perspective(sgl_rad(45.0f), 1.0f, 0.1f, 100.0f);
+
+    sgl_matrix_mode_modelview();
+    sgl_translate(0.0f, 0.0f, -12.0f);
+    sgl_rotate(sgl_rad(rot[0]), 1.0f, 0.0f, 0.0f);
+    sgl_rotate(sgl_rad(rot[1]), 0.0f, 1.0f, 0.0f);
+    cube();
+    sgl_push_matrix();
+    sgl_translate(0.0f, 0.0f, 3.0f);
+    sgl_scale(0.5f, 0.5f, 0.5f);
+    sgl_rotate(-2.0f * sgl_rad(rot[0]), 1.0f, 0.0f, 0.0f);
+    sgl_rotate(-2.0f * sgl_rad(rot[1]), 0.0f, 1.0f, 0.0f);
+    cube();
+    sgl_push_matrix();
+    sgl_translate(0.0f, 0.0f, 3.0f);
+    sgl_scale(0.5f, 0.5f, 0.5f);
+    sgl_rotate(-3.0f * sgl_rad(2*rot[0]), 1.0f, 0.0f, 0.0f);
+    sgl_rotate(3.0f * sgl_rad(2*rot[1]), 0.0f, 0.0f, 1.0f);
+    cube();
+    sgl_pop_matrix();
+    sgl_pop_matrix();
+}
+
+static void draw_triangle() {
+    sgl_defaults();
+    sgl_begin_triangles();
+    sgl_v2f_c3b( 0.0f,  0.5f, 255, 0, 0);
+    sgl_v2f_c3b(-0.5f, -0.5f, 0, 0, 255);
+    sgl_v2f_c3b( 0.5f, -0.5f, 0, 255, 0);
+    sgl_end();
+}
 
 static void frame() {
 
     const float aspect = sapp_widthf() / sapp_heightf();
-    static uint32_t frame_count = 0;
-    frame_count > 60 ? frame_count = 0 : frame_count++;
+    const float t = (float)(sapp_frame_duration() * 60.0);
 
-    sgl_defaults();
-    sgl_push_pipeline();
-    sgl_load_pipeline(state.depth_test_pip);
-    sgl_matrix_mode_projection();
-    sgl_perspective(sgl_rad(45.0f), aspect, 0.1f, 1000.0f);
-    sgl_matrix_mode_modelview();
-    sgl_translate(sinf(frame_count * 0.02f) * 16.0f, sinf(frame_count * 0.01f) * 4.0f, 0.0f);
-    sgl_c3f(1.0f, 0.0f, 1.0f);
-    grid(-7.0f, frame_count);
+    sgl_viewport(0, 0, sapp_width(), sapp_height(), true);
+    //draw_triangle();
+    draw_cubes(t);
 
     auto frame_desc = simgui_frame_desc_t{};
     frame_desc.width = sapp_width();
@@ -128,7 +182,7 @@ sapp_desc sokol_main(int argc, char* argv[]) {
     app_desc.frame_cb = frame;
     app_desc.cleanup_cb = cleanup;
     app_desc.event_cb = event;
-    app_desc.window_title = "Hello Sokol + Dear ImGui";
+    app_desc.window_title = "tdg3";
     app_desc.width = 800;
     app_desc.height = 600;
     app_desc.icon.sokol_default = true;

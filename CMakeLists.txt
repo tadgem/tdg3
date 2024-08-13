@@ -36,6 +36,7 @@ set(SOKOL_HEADERS
     sokol/sokol_gl.h
     sokol/fontstash.h
     sokol/sokol_fontstash.h
+    sokol/sokol_fetch.h
     sokol/stb_truetype.h
 )
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
