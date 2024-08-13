@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
-project(cimgui-sokol-starterkit)
+project(imgui-sokol-starterkit)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 # Linux -pthread shenanigans
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -47,10 +47,10 @@ target_include_directories(sokol INTERFACE sokol)
 
 #=== EXECUTABLE: demo
 if(CMAKE_SYSTEM_NAME STREQUAL Windows)
-    add_executable(demo WIN32 demo.c)
+    add_executable(demo WIN32 demo.cpp)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT demo)
 else()
-    add_executable(demo demo.c)
+    add_executable(demo demo.cpp)
 endif()
 target_link_libraries(demo sokol)
 
