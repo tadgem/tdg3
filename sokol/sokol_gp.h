@@ -2215,7 +2215,7 @@ void sgp_reset_blend_mode(void) {
 void sgp_set_color(float r, float g, float b, float a) {
     SOKOL_ASSERT(_sgp.init_cookie == _SGP_INIT_COOKIE);
     SOKOL_ASSERT(_sgp.cur_state > 0);
-    _sgp.state.color = (sgp_color_ub4){
+    _sgp.state.color = sgp_color_ub4{
         (uint8_t)_sg_clamp(r*255.0f, 0.0f, 255.0f),
         (uint8_t)_sg_clamp(g*255.0f, 0.0f, 255.0f),
         (uint8_t)_sg_clamp(b*255.0f, 0.0f, 255.0f),

@@ -33,6 +33,10 @@ set(SOKOL_HEADERS
     sokol/sokol_imgui.h
     sokol/sokol_glue.h
     sokol/sokol_gp.h
+    sokol/sokol_gl.h
+    sokol/fontstash.h
+    sokol/sokol_fontstash.h
+    sokol/stb_truetype.h
 )
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
     add_library(sokol STATIC sokol/sokol.c ${SOKOL_HEADERS})
