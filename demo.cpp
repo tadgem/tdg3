@@ -20,11 +20,21 @@
 #include "imgui/imgui.h"
 #include "sokol_imgui.h"
 #include "sokol_gp.h"
-
+#define SOKOL_FETCH_IMPL
+#include "sokol/sokol_fetch.h"
 static struct {
-    sg_pass_action pass_action;
+    sg_pass_action  pass_action;
     sgl_pipeline    depth_test_pip;
+    FONScontext*    fons_context;
+    int             font_default = FONS_INVALID;
+    uint8_t         font_default_data[256 * 1024];
 } state;
+
+static void font_default_loaded(const sfetch_response_t* response) {
+    if (response->fetched) {
+      state.font_default = fonsAddFontMem(state.fons_context, "default", (unsigned char*)response->data.ptr, (int)response->data.size, false);
+    }
+}
 
 static void init() {
     auto sokol_gfx_description = sg_desc {};
@@ -42,12 +52,30 @@ static void init() {
     sgl_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
     sgl_pipeline_desc.depth.write_enabled = true;
     sgl_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
-
-    // a pipeline object with less-equal depth-testing
     state.depth_test_pip = sgl_make_pipeline(sgl_pipeline_desc);
 
     auto sokol_imgui_description = simgui_desc_t{ };
     simgui_setup(&sokol_imgui_description);
+
+    const int atlas_dim = 512.0f;
+    sfons_desc_t font_stash_desc = {};
+    font_stash_desc.width = atlas_dim;
+    font_stash_desc.height = atlas_dim;
+
+    state.fons_context = sfons_create(&font_stash_desc);
+
+    sfetch_desc_t fetch_setup_desc {};
+    fetch_setup_desc.num_channels = 1;
+    fetch_setup_desc.num_lanes = 4;
+    fetch_setup_desc.logger.func = slog_func;
+    sfetch_setup(&fetch_setup_desc);
+
+    sfetch_request_t request {};
+    request.path = "../assets/fonts/Zain-Black.ttf";
+    request.callback = font_default_loaded;
+    request.buffer = SFETCH_RANGE(state.font_default_data);
+    sfetch_send(request);
+
 
     // initial clear color
     auto pass_action = sg_pass_action {};
@@ -88,6 +116,64 @@ static void cube(void) {
     sgl_v3f_t2f( 1.0f,  1.0f,  1.0f,  1.0f, -1.0f);
     sgl_v3f_t2f( 1.0f,  1.0f, -1.0f, -1.0f, -1.0f);
     sgl_end();
+}
+
+static void line(float sx, float sy, float ex, float ey)
+{
+    sgl_begin_lines();
+    sgl_c4b(255, 255, 0, 128);
+    sgl_v2f(sx, sy);
+    sgl_v2f(ex, ey);
+    sgl_end();
+}
+
+static void draw_some_text()
+{
+    // text rendering via fontstash.h
+    float sx, sy, dx, dy, lh = 0.0f;
+    uint32_t white = sfons_rgba(255, 255, 255, 255);
+    uint32_t black = sfons_rgba(0, 0, 0, 255);
+    uint32_t brown = sfons_rgba(192, 128, 0, 128);
+    uint32_t blue  = sfons_rgba(0, 192, 255, 255);
+    fonsClearState(state.fons_context);
+
+    float dpis = sapp_dpi_scale();
+    sgl_defaults();
+    sgl_matrix_mode_projection();
+    sgl_ortho(0.0f, sapp_widthf(), sapp_heightf(), 0.0f, -1.0f, +1.0f);
+
+    sx = 50*dpis; sy = 50*dpis;
+    dx = sx; dy = sy;
+
+    FONScontext* fs = state.fons_context;
+    if (state.font_default != FONS_INVALID) {
+      fonsSetSize(fs, 18.0f*dpis);
+      fonsSetFont(fs, state.font_default);
+      fonsSetColor(fs, white);
+      dx = 50*dpis; dy = 350*dpis;
+      line(dx-10*dpis,dy,dx+250*dpis,dy);
+      fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
+      dx = fonsDrawText(fs, dx,dy,"Top",NULL);
+      dx += 10*dpis;
+      fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_MIDDLE);
+      dx = fonsDrawText(fs, dx,dy,"Middle",NULL);
+      dx += 10*dpis;
+      fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_BASELINE);
+      dx = fonsDrawText(fs, dx,dy,"Baseline",NULL);
+      dx += 10*dpis;
+      fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_BOTTOM);
+      fonsDrawText(fs, dx,dy,"Bottom",NULL);
+      dx = 150*dpis; dy = 400*dpis;
+      line(dx,dy-30*dpis,dx,dy+80.0f*dpis);
+      fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_BASELINE);
+      fonsDrawText(fs, dx,dy,"Left",NULL);
+      dy += 30*dpis;
+      fonsSetAlign(fs, FONS_ALIGN_CENTER | FONS_ALIGN_BASELINE);
+      fonsDrawText(fs, dx,dy,"Center",NULL);
+      dy += 30*dpis;
+      fonsSetAlign(fs, FONS_ALIGN_RIGHT | FONS_ALIGN_BASELINE);
+      fonsDrawText(fs, dx,dy,"Right",NULL);
+    }
 }
 
 static void draw_cubes(const float t) {
@@ -135,10 +221,13 @@ static void frame() {
 
     const float aspect = sapp_widthf() / sapp_heightf();
     const float t = (float)(sapp_frame_duration() * 60.0);
+    sfetch_dowork();
+
 
     sgl_viewport(0, 0, sapp_width(), sapp_height(), true);
     //draw_triangle();
     draw_cubes(t);
+    draw_some_text();
 
     auto frame_desc = simgui_frame_desc_t{};
     frame_desc.width = sapp_width();
@@ -160,6 +249,7 @@ static void frame() {
     pass.action = state.pass_action;
     pass.swapchain = sglue_swapchain();
 
+    sfons_flush(state.fons_context);
     sg_begin_pass(&pass);
     sgl_draw();
     simgui_render();

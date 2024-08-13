@@ -86,3 +86,5 @@ endif()
 set_target_properties(demo PROPERTIES LINKER_LANGUAGE C)
 
 add_shaders(demo ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
