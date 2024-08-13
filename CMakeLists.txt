@@ -3,6 +3,16 @@ project(imgui-sokol-starterkit)
 
 set(TOOLS_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/tools CACHE INTERNAL "Cache the tools directory for use in helper scripts")
 
+if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
+    message("Building TDG3 for Emscripten")
+else()
+    message("Building TDG3 for Desktop")
+    add_subdirectory("sdl")
+endif()
+
+
+add_subdirectory(submodules/soloud/contrib)
+
 include(cmake-etc/TdgUtils.cmake)
 
 set(CMAKE_C_STANDARD 11)
@@ -39,6 +49,9 @@ set(SOKOL_HEADERS
     sokol/sokol_fetch.h
     sokol/stb_truetype.h
 )
+
+set(SOLOUD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/submodules/soloud/include CACHE INTERNAL "")
+
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
     add_library(sokol STATIC sokol/sokol.c ${SOKOL_HEADERS})
     target_compile_options(sokol PRIVATE -x objective-c)
@@ -64,26 +77,23 @@ if(CMAKE_SYSTEM_NAME STREQUAL Windows)
 else()
     add_executable(demo demo.cpp)
 endif()
-target_link_libraries(demo sokol)
+target_link_libraries(demo sokol soloud)
+target_include_directories(demo PUBLIC ${SOLOUD_INCLUDE_DIR})
 
 # Emscripten-specific linker options
 if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
+    add_compile_definitions("__EMSCRIPTEN__")
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    # use our own minimal shell.html
-    target_link_options(demo PRIVATE --shell-file ../sokol/shell.html)
-    # link with WebGL2
-    target_link_options(demo PRIVATE -sUSE_WEBGL2=1)
     # WASM+JS size optimizations
-    target_link_options(demo PRIVATE -sNO_FILESYSTEM=1 -sASSERTIONS=0 -sMALLOC=emmalloc --closure=1)
+    target_link_options(demo PRIVATE "--shell-file ../sokol/shell.html" "-sNO_FILESYSTEM=1" "-sUSE_WEBGL2=1" "-sASSERTIONS=0" "-sMALLOC=emmalloc" "-sUSE_SDL=2" "WITH_SDL2_STATIC" "--closure=1")
+else()
+    target_link_libraries(demo SDL2-static)
 endif()
 
 # explicitly strip dead code
 if (CMAKE_C_COMPILER_ID MATCHES "Clang" AND NOT CMAKE_SYSTEM_NAME STREQUAL Emscripten)
     target_link_options(demo PRIVATE LINKER:-dead_strip)
 endif()
-
-# this hack removes the xxx-CMakeForceLinker.cxx dummy file
-set_target_properties(demo PROPERTIES LINKER_LANGUAGE C)
 
 add_shaders(demo ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
 

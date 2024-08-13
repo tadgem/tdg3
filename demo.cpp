@@ -8,6 +8,7 @@
 #endif
 #include "sokol_app.h"
 #include "sokol_gfx.h"
+#include <iostream>
 #define SOKOL_GP_IMPL
 #include "sokol_gp.h"
 #include "sokol_log.h"
@@ -22,7 +23,13 @@
 #include "sokol_imgui.h"
 #define SOKOL_FETCH_IMPL
 #include "sokol/sokol_fetch.h"
+#include "soloud.h"
+#include "soloud_wav.h"
+#include "soloud_speech.h"
+#include "soloud_thread.h"
+
 static struct {
+    SoLoud::Soloud  audio_engine;
     sg_pass_action  pass_action;
     sgl_pipeline    depth_test_pip;
     FONScontext*    fons_context;
@@ -70,12 +77,6 @@ static void init() {
     fetch_setup_desc.logger.func = slog_func;
     sfetch_setup(&fetch_setup_desc);
 
-    sfetch_request_t request {};
-    request.path = "../assets/fonts/Zain-Black.ttf";
-    request.callback = font_default_loaded;
-    request.buffer = SFETCH_RANGE(state.font_default_data);
-    sfetch_send(request);
-
     sgp_desc sgpdesc = {};
     sgp_setup(&sgpdesc);
     if (!sgp_is_valid()) {
@@ -83,12 +84,24 @@ static void init() {
       exit(-1);
     }
 
+    if(state.audio_engine.init(1, 2) != SoLoud::SOLOUD_ERRORS::SO_NO_ERROR)
+    {
+      std::cout << "What!?\n";
+    }
+    SoLoud::Speech speech;  // A sound source (speech, in this case)
+
+    // Configure sound source
+    speech.setText("1 2 3   1 2 3   Hello world. Welcome to So-Loud.");
+    state.audio_engine.play(speech);
+
 
     // initial clear color
     auto pass_action = sg_pass_action {};
     pass_action.colors[0] = { SG_LOADACTION_CLEAR, SG_STOREACTION_STORE,  { 0.0f, 0.5f, 1.0f, 1.0 } };
     pass_action.depth = {SG_LOADACTION_CLEAR, SG_STOREACTION_STORE, 1.0f};
     state.pass_action = pass_action;
+
+
 }
 static void cube(void) {
     sgl_begin_quads();
