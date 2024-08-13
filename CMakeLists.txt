@@ -10,9 +10,6 @@ else()
     add_subdirectory("sdl")
 endif()
 
-
-add_subdirectory(submodules/soloud/contrib)
-
 include(cmake-etc/TdgUtils.cmake)
 
 set(CMAKE_C_STANDARD 11)
@@ -77,7 +74,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL Windows)
 else()
     add_executable(demo demo.cpp)
 endif()
-target_link_libraries(demo sokol soloud)
+target_link_libraries(demo sokol)
 target_include_directories(demo PUBLIC ${SOLOUD_INCLUDE_DIR})
 
 # Emscripten-specific linker options
@@ -85,7 +82,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
     add_compile_definitions("__EMSCRIPTEN__")
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     # WASM+JS size optimizations
-    target_link_options(demo PRIVATE "--shell-file ../sokol/shell.html" "-sNO_FILESYSTEM=1" "-sUSE_WEBGL2=1" "-sASSERTIONS=0" "-sMALLOC=emmalloc" "-sUSE_SDL=2" "WITH_SDL2_STATIC" "--closure=1")
+    target_link_options(demo PRIVATE "--shell-file ../sokol/shell.html" "-sNO_FILESYSTEM=1" "-sUSE_WEBGL2=1" "-sASSERTIONS=0" "-sMALLOC=emmalloc" "-sUSE_SDL=2" "--closure=1")
 else()
     target_link_libraries(demo SDL2-static)
 endif()

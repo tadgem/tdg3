@@ -23,13 +23,7 @@
 #include "sokol_imgui.h"
 #define SOKOL_FETCH_IMPL
 #include "sokol/sokol_fetch.h"
-#include "soloud.h"
-#include "soloud_wav.h"
-#include "soloud_speech.h"
-#include "soloud_thread.h"
-
 static struct {
-    SoLoud::Soloud  audio_engine;
     sg_pass_action  pass_action;
     sgl_pipeline    depth_test_pip;
     FONScontext*    fons_context;
@@ -83,17 +77,6 @@ static void init() {
       fprintf(stderr, "Failed to create Sokol GP context: %s\n", sgp_get_error_message(sgp_get_last_error()));
       exit(-1);
     }
-
-    if(state.audio_engine.init(1, 2) != SoLoud::SOLOUD_ERRORS::SO_NO_ERROR)
-    {
-      std::cout << "What!?\n";
-    }
-    SoLoud::Speech speech;  // A sound source (speech, in this case)
-
-    // Configure sound source
-    speech.setText("1 2 3   1 2 3   Hello world. Welcome to So-Loud.");
-    state.audio_engine.play(speech);
-
 
     // initial clear color
     auto pass_action = sg_pass_action {};
