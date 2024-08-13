@@ -1,4 +1,4 @@
-#include "sokol_app.h"
+#define SOKOL_IMPL
 #ifdef WIN32
 #define SOKOL_D3D11
 #else
@@ -6,20 +6,20 @@
 #define SOKOL_GLES3
 #endif
 #endif
-
+#include "sokol_app.h"
 #include "sokol_gfx.h"
+#define SOKOL_GP_IMPL
+#include "sokol_gp.h"
 #include "sokol_log.h"
 #include "sokol_glue.h"
 #define SOKOL_GL_IMPL
 #include "sokol_gl.h"
-#include <stdio.h>  // needed by fontstash's IO functions even though they are not used
 #define FONTSTASH_IMPLEMENTATION
 #include "fontstash.h"
 #define SOKOL_FONTSTASH_IMPL
 #include "sokol_fontstash.h"
 #include "imgui/imgui.h"
 #include "sokol_imgui.h"
-#include "sokol_gp.h"
 #define SOKOL_FETCH_IMPL
 #include "sokol/sokol_fetch.h"
 static struct {
@@ -75,6 +75,13 @@ static void init() {
     request.callback = font_default_loaded;
     request.buffer = SFETCH_RANGE(state.font_default_data);
     sfetch_send(request);
+
+    sgp_desc sgpdesc = {};
+    sgp_setup(&sgpdesc);
+    if (!sgp_is_valid()) {
+      fprintf(stderr, "Failed to create Sokol GP context: %s\n", sgp_get_error_message(sgp_get_last_error()));
+      exit(-1);
+    }
 
 
     // initial clear color
@@ -219,16 +226,19 @@ static void draw_triangle() {
 
 static void frame() {
 
+    // prep
     const float aspect = sapp_widthf() / sapp_heightf();
+    int width = sapp_width(), height = sapp_height();
     const float t = (float)(sapp_frame_duration() * 60.0);
     sfetch_dowork();
-
-
+    // Begin recording draw commands for a frame buffer of size (width, height).
+    sgp_begin(width, height);
+    // Set frame buffer drawing region to (0,0,width,height).
+    sgp_viewport(0, 0, width, height);
+    // Set drawing coordinate space to (left=-ratio, right=ratio, top=1, bottom=-1).
+    sgp_project(-aspect, aspect, 1.0f, -1.0f);
+    // Clear the frame buffer.
     sgl_viewport(0, 0, sapp_width(), sapp_height(), true);
-    //draw_triangle();
-    draw_cubes(t);
-    draw_some_text();
-
     auto frame_desc = simgui_frame_desc_t{};
     frame_desc.width = sapp_width();
     frame_desc.height = sapp_height();
@@ -236,22 +246,36 @@ static void frame() {
     frame_desc.dpi_scale = sapp_dpi_scale();
     simgui_new_frame(&frame_desc);
 
+    // Do main loop stuff
+    //draw_triangle();
+    draw_cubes(t);
+    draw_some_text();
+
+
     ImGui::SetNextWindowPos({10, 10}, ImGuiCond_Once, {0,0 });
     ImGui::SetNextWindowSize({400, 400}, ImGuiCond_Once);
     ImGui::Begin("Sokol ImGui", 0, ImGuiWindowFlags_None);
     ImGui::ColorEdit3("Background", &state.pass_action.colors[0].clear_value.r, ImGuiColorEditFlags_None);
     ImGui::End();
 
-    /*=== UI CODE ENDS HERE ===*/
+    // Draw an animated rectangle that rotates and changes its colors.
+    float time = sapp_frame_count() * sapp_frame_duration();
+    float r = sinf(time)*0.5+0.5, g = cosf(time)*0.5+0.5;
+    sgp_set_color(r, g, 0.3f, 1.0f);
+    sgp_rotate_at(time, 0.0f, 0.0f);
+    sgp_draw_filled_rect(-0.5f, -0.5f, 1.0f, 1.0f);
 
+    // end main loop
     auto pass = sg_pass {};
 
     pass.action = state.pass_action;
     pass.swapchain = sglue_swapchain();
 
-    sfons_flush(state.fons_context);
     sg_begin_pass(&pass);
+    sfons_flush(state.fons_context);
     sgl_draw();
+    sgp_flush();
+    sgp_end();
     simgui_render();
     sg_end_pass();
     sg_commit();
