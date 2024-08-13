@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(imgui-sokol-starterkit)
+
+set(TOOLS_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/tools CACHE INTERNAL "Cache the tools directory for use in helper scripts")
+
+include(cmake-etc/TdgUtils.cmake)
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 # Linux -pthread shenanigans
@@ -26,7 +31,9 @@ set(SOKOL_HEADERS
     sokol/sokol_gfx.h
     sokol/sokol_app.h
     sokol/sokol_imgui.h
-    sokol/sokol_glue.h)
+    sokol/sokol_glue.h
+    sokol/sokol_gp.h
+)
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
     add_library(sokol STATIC sokol/sokol.c ${SOKOL_HEADERS})
     target_compile_options(sokol PRIVATE -x objective-c)
@@ -72,3 +79,5 @@ endif()
 
 # this hack removes the xxx-CMakeForceLinker.cxx dummy file
 set_target_properties(demo PROPERTIES LINKER_LANGUAGE C)
+
+add_shaders(demo ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
