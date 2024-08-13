@@ -5,3 +5,13 @@ build/
 /.idea
 /wasm
 /wasm2
+sdl_mixer/external/flac/
+sdl_mixer/external/libgme/
+sdl_mixer/external/libxmp/
+sdl_mixer/external/mpg123/
+sdl_mixer/external/ogg/
+sdl_mixer/external/opus/
+sdl_mixer/external/opusfile/
+sdl_mixer/external/tremor/
+sdl_mixer/external/vorbis/
+sdl_mixer/external/wavpack/
