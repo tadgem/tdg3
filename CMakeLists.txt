@@ -1,19 +1,21 @@
 cmake_minimum_required(VERSION 3.5)
-project(imgui-sokol-starterkit)
+project(demo)
 
 set(TOOLS_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/tools CACHE INTERNAL "Cache the tools directory for use in helper scripts")
-
+set(BUILD_SHARED_LIBS OFF)
 if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
     message("Building TDG3 for Emscripten")
 else()
     message("Building TDG3 for Desktop")
     add_subdirectory("sdl")
+    add_subdirectory("sdl_mixer")
 endif()
 
 include(cmake-etc/TdgUtils.cmake)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+
 # Linux -pthread shenanigans
 if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -81,10 +83,15 @@ target_include_directories(demo PUBLIC ${SOLOUD_INCLUDE_DIR})
 if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
     add_compile_definitions("__EMSCRIPTEN__")
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    # use our own minimal shell.html
+    target_link_options(demo PRIVATE --shell-file ../sokol/shell.html)
+    # link with WebGL2
+    target_link_options(demo PRIVATE -sUSE_WEBGL2=1)
     # WASM+JS size optimizations
-    target_link_options(demo PRIVATE "--shell-file ../sokol/shell.html" "-sNO_FILESYSTEM=1" "-sUSE_WEBGL2=1" "-sASSERTIONS=0" "-sMALLOC=emmalloc" "-sUSE_SDL=2" "--closure=1")
+    target_compile_options(demo PRIVATE -sNO_FILESYSTEM=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASSERTIONS=0 -sMALLOC=emmalloc --closure=1)
+    target_link_options(demo PRIVATE -sNO_FILESYSTEM=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASSERTIONS=0 -sMALLOC=emmalloc --closure=1)
 else()
-    target_link_libraries(demo SDL2-static)
+    target_link_libraries(demo SDL2-static SDL2_mixer)
 endif()
 
 # explicitly strip dead code

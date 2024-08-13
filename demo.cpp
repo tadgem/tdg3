@@ -3,6 +3,7 @@
 #define SOKOL_D3D11
 #else
 #ifdef __EMSCRIPTEN__
+#include <emscripten.h>
 #define SOKOL_GLES3
 #endif
 #endif
@@ -23,6 +24,10 @@
 #include "sokol_imgui.h"
 #define SOKOL_FETCH_IMPL
 #include "sokol/sokol_fetch.h"
+
+#include "SDL.h"
+#include "SDL_mixer.h"
+
 static struct {
     sg_pass_action  pass_action;
     sgl_pipeline    depth_test_pip;
@@ -38,6 +43,21 @@ static void font_default_loaded(const sfetch_response_t* response) {
 }
 
 static void init() {
+    if(SDL_Init( SDL_INIT_AUDIO ) == -1 )
+    {
+      return;
+    }
+
+    if(Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 )
+    {
+      return;
+    }
+    auto music = Mix_LoadWAV( "../assets/sounds/pedro.wav" );
+
+    if( Mix_PlayChannel( -1, music, 0 ) == -1 )
+    {
+      return;
+    }
     auto sokol_gfx_description = sg_desc {};
 
     sokol_gfx_description.environment = sglue_environment();
@@ -77,6 +97,12 @@ static void init() {
       fprintf(stderr, "Failed to create Sokol GP context: %s\n", sgp_get_error_message(sgp_get_last_error()));
       exit(-1);
     }
+
+    sfetch_request_t request {};
+    request.path = "../assets/fonts/Zain-Black.ttf";
+    request.callback = font_default_loaded;
+    request.buffer = SFETCH_RANGE(state.font_default_data);
+    sfetch_send(request);
 
     // initial clear color
     auto pass_action = sg_pass_action {};

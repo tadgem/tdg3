@@ -4,3 +4,4 @@ build/
 /cmake-build-minsizerel
 /.idea
 /wasm
+/wasm2
