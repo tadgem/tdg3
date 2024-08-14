@@ -11,6 +11,8 @@ else()
     add_subdirectory("third-party/sdl_mixer")
 endif()
 
+add_subdirectory(third-party/glm)
+
 include(cmake-etc/TdgUtils.cmake)
 
 set(CMAKE_C_STANDARD 11)
@@ -80,7 +82,7 @@ else()
     add_executable(demo demo.cpp ${TDG3_SRC_FILES} ${TDG3_HEADER_FILES})
 endif()
 target_link_libraries(demo sokol)
-target_include_directories(demo PUBLIC ${SOLOUD_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/third-party/sokol)
+target_include_directories(demo PUBLIC ${SOLOUD_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/third-party/sokol ${CMAKE_CURRENT_SOURCE_DIR}/third-party/glm )
 
 # Emscripten-specific linker options
 if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)

@@ -1,6 +1,7 @@
 #include "tdg3/globals.h"
 #include "tdg3/init.h"
 #include "tdg3/shapes.h"
+#include "glm.hpp"
 
 static void draw_some_text()
 {
@@ -84,6 +85,8 @@ static void draw_cubes(const float t) {
 
 static void frame() {
 
+    glm::vec3 position {0};
+    position += glm::vec3{1, 2, 3};
     // clear font state for frame
     fonsClearState(tdg::Globals::g_FontStashContext);
     // prep
@@ -116,6 +119,7 @@ static void frame() {
     ImGui::SetNextWindowSize({400, 400}, ImGuiCond_Once);
     ImGui::Begin("Sokol ImGui", 0, ImGuiWindowFlags_None);
     ImGui::ColorEdit3("Background", &tdg::Globals::g_DefaultPass.colors[0].clear_value.r, ImGuiColorEditFlags_None);
+    ImGui::SliderFloat3("Sample vector", &position[0], - 100, 100);
     if(ImGui::Button("Play Pedro!"))
     {
       std::cout << "TDG3 : Playing Pedro"<< std::endl;
