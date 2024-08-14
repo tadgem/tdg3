@@ -23,7 +23,7 @@
 #include "imgui/imgui.h"
 #include "sokol_imgui.h"
 #define SOKOL_FETCH_IMPL
-#include "sokol/sokol_fetch.h"
+#include "sokol_fetch.h"
 #include "SDL.h"
 #include "SDL_mixer.h"
 
@@ -59,7 +59,6 @@ static void init_sdl_mixer()
     }
 
     int chosen_device = Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) ;
-    // Mix_Init(MIX_INIT_WAVPACK);
     if(chosen_device == -1 )
     {
       return;
@@ -73,9 +72,7 @@ static void init_sdl_mixer()
 }
 
 static void init() {
-#ifndef __EMSCRIPTEN__
     init_sdl_mixer();
-#endif
     auto sokol_gfx_description = sg_desc {};
 
     sokol_gfx_description.environment = sglue_environment();
@@ -339,7 +336,6 @@ static void event(const sapp_event* ev) {
     {
       std::cout << "Gained Focus" << std::endl;
 #ifdef __EMSCRIPTEN__
-      init_sdl_mixer();
 #endif
     }
 }

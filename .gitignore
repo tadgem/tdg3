@@ -16,3 +16,5 @@ sdl_mixer/external/tremor/
 sdl_mixer/external/vorbis/
 sdl_mixer/external/wavpack/
 /wsm3
+cmake-build-minsizerel-visual-studio/
+cmake-build-debug-visual-studio/
