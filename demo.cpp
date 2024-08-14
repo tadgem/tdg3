@@ -2,6 +2,30 @@
 #include "tdg3/init.h"
 #include "tdg3/shapes.h"
 #include "glm.hpp"
+#include "assimp/Importer.hpp"
+#include "assimp/postprocess.h"
+#include "assimp/cimport.h"
+#include "assimp/mesh.h"
+#include "assimp/scene.h"
+int mesh_vert_count = 0;
+static void init()
+{
+  tdg::engine_init::init();
+  Assimp::Importer importer;
+
+
+  auto* scene = importer.ReadFile("../assets/models/Suzanne/glTF/Suzanne.gltf",
+                                  aiProcess_Triangulate |
+                                      aiProcess_CalcTangentSpace |
+                                      aiProcess_OptimizeMeshes |
+                                      aiProcess_GenSmoothNormals |
+                                      aiProcess_OptimizeGraph |
+                                      aiProcess_FixInfacingNormals |
+                                      aiProcess_FindInvalidData |
+                                      aiProcess_GenBoundingBoxes );
+  mesh_vert_count = scene->mMeshes[0]->mNumVertices;
+
+}
 
 static void draw_some_text()
 {
@@ -120,6 +144,7 @@ static void frame() {
     ImGui::Begin("Sokol ImGui", 0, ImGuiWindowFlags_None);
     ImGui::ColorEdit3("Background", &tdg::Globals::g_DefaultPass.colors[0].clear_value.r, ImGuiColorEditFlags_None);
     ImGui::SliderFloat3("Sample vector", &position[0], - 100, 100);
+    ImGui::InputInt("Model Num Vertices", &mesh_vert_count);
     if(ImGui::Button("Play Pedro!"))
     {
       std::cout << "TDG3 : Playing Pedro"<< std::endl;
@@ -167,7 +192,7 @@ static void event(const sapp_event* ev) {
 
 sapp_desc sokol_main(int argc, char* argv[]) {
     sapp_desc app_desc{};
-    app_desc.init_cb = tdg::engine_init::init;
+    app_desc.init_cb = init;
     app_desc.frame_cb = frame;
     app_desc.cleanup_cb = cleanup;
     app_desc.event_cb = event;

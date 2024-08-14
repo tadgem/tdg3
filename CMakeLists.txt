@@ -5,6 +5,7 @@ set(TOOLS_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/tools CACHE INTERNAL "Cache the tools
 set(BUILD_SHARED_LIBS OFF)
 if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
     message("Building TDG3 for Emscripten")
+    set(ASSIMP_BUILD_ZLIB ON CACHE INTERNAL "")
 else()
     message("Building TDG3 for Desktop")
     add_subdirectory("third-party/sdl")
@@ -12,6 +13,9 @@ else()
 endif()
 
 add_subdirectory(third-party/glm)
+
+
+add_subdirectory(third-party/assimp)
 
 include(cmake-etc/TdgUtils.cmake)
 
@@ -81,8 +85,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL Windows)
 else()
     add_executable(demo demo.cpp ${TDG3_SRC_FILES} ${TDG3_HEADER_FILES})
 endif()
-target_link_libraries(demo sokol)
-target_include_directories(demo PUBLIC ${SOLOUD_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/third-party/sokol ${CMAKE_CURRENT_SOURCE_DIR}/third-party/glm )
+target_include_directories(demo PUBLIC
+        ${SOLOUD_INCLUDE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/third-party/sokol
+        ${CMAKE_CURRENT_SOURCE_DIR}/third-party/glm
+        ${CMAKE_CURRENT_SOURCE_DIR}/third-party/assimp/include
+)
 
 # Emscripten-specific linker options
 if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
@@ -92,11 +100,12 @@ if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
     target_link_options(demo PRIVATE --shell-file ../third-party/sokol/shell.html)
     # link with WebGL2
     target_link_options(demo PRIVATE -sUSE_WEBGL2=1)
+    target_link_libraries(demo PRIVATE assimp sokol)
     # WASM+JS size optimizations
     target_compile_options(demo PRIVATE --preload-file assets -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASSERTIONS=1 -sMALLOC=emmalloc --closure=1)
     target_link_options(demo PRIVATE --preload-file assets -sALLOW_MEMORY_GROWTH=1 -sFORCE_FILESYSTEM=1 -sUSE_SDL=2 -sUSE_SDL_MIXER=2 -sASSERTIONS=1 -sMALLOC=emmalloc --closure=1)
 else()
-    target_link_libraries(demo SDL2-static SDL2_mixer)
+    target_link_libraries(demo SDL2-static SDL2_mixer assimp sokol)
 endif()
 
 # explicitly strip dead code
