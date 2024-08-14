@@ -71,10 +71,10 @@ target_include_directories(sokol PUBLIC sokol ${CMAKE_CURRENT_SOURCE_DIR}/third-
 
 #=== EXECUTABLE: demo
 if(CMAKE_SYSTEM_NAME STREQUAL Windows)
-    add_executable(demo WIN32 demo.cpp)
+    add_executable(demo WIN32 demo.cpp init.h init.cpp globals.h)
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT demo)
 else()
-    add_executable(demo demo.cpp)
+    add_executable(demo demo.cpp init.h init.cpp globals.h)
 endif()
 target_link_libraries(demo sokol)
 target_include_directories(demo PUBLIC ${SOLOUD_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/third-party/sokol)
