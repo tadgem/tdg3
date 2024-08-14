@@ -1,60 +1,6 @@
-#include "init.h"
-#include "globals.h"
-#include "imgui/imgui.h"
-#include "sokol_app.h"
-#include "sokol_fetch.h"
-#include "sokol_fontstash.h"
-#include "sokol_glue.h"
-#include "sokol_gp.h"
-#include "sokol_imgui.h"
-#include "sokol_log.h"
-#include <iostream>
-#include "fontstash.h"
-
-
-static void cube(void) {
-    sgl_begin_quads();
-    sgl_c3f(1.0f, 0.0f, 0.0f);
-    sgl_v3f_t2f(-1.0f,  1.0f, -1.0f, -1.0f,  1.0f);
-    sgl_v3f_t2f( 1.0f,  1.0f, -1.0f,  1.0f,  1.0f);
-    sgl_v3f_t2f( 1.0f, -1.0f, -1.0f,  1.0f, -1.0f);
-    sgl_v3f_t2f(-1.0f, -1.0f, -1.0f, -1.0f, -1.0f);
-    sgl_c3f(0.0f, 1.0f, 0.0f);
-    sgl_v3f_t2f(-1.0f, -1.0f,  1.0f, -1.0f,  1.0f);
-    sgl_v3f_t2f( 1.0f, -1.0f,  1.0f,  1.0f,  1.0f);
-    sgl_v3f_t2f( 1.0f,  1.0f,  1.0f,  1.0f, -1.0f);
-    sgl_v3f_t2f(-1.0f,  1.0f,  1.0f, -1.0f, -1.0f);
-    sgl_c3f(0.0f, 0.0f, 1.0f);
-    sgl_v3f_t2f(-1.0f, -1.0f,  1.0f, -1.0f,  1.0f);
-    sgl_v3f_t2f(-1.0f,  1.0f,  1.0f,  1.0f,  1.0f);
-    sgl_v3f_t2f(-1.0f,  1.0f, -1.0f,  1.0f, -1.0f);
-    sgl_v3f_t2f(-1.0f, -1.0f, -1.0f, -1.0f, -1.0f);
-    sgl_c3f(1.0f, 0.5f, 0.0f);
-    sgl_v3f_t2f(1.0f, -1.0f,  1.0f, -1.0f,   1.0f);
-    sgl_v3f_t2f(1.0f, -1.0f, -1.0f,  1.0f,   1.0f);
-    sgl_v3f_t2f(1.0f,  1.0f, -1.0f,  1.0f,  -1.0f);
-    sgl_v3f_t2f(1.0f,  1.0f,  1.0f, -1.0f,  -1.0f);
-    sgl_c3f(0.0f, 0.5f, 1.0f);
-    sgl_v3f_t2f( 1.0f, -1.0f, -1.0f, -1.0f,  1.0f);
-    sgl_v3f_t2f( 1.0f, -1.0f,  1.0f,  1.0f,  1.0f);
-    sgl_v3f_t2f(-1.0f, -1.0f,  1.0f,  1.0f, -1.0f);
-    sgl_v3f_t2f(-1.0f, -1.0f, -1.0f, -1.0f, -1.0f);
-    sgl_c3f(1.0f, 0.0f, 0.5f);
-    sgl_v3f_t2f(-1.0f,  1.0f, -1.0f, -1.0f,  1.0f);
-    sgl_v3f_t2f(-1.0f,  1.0f,  1.0f,  1.0f,  1.0f);
-    sgl_v3f_t2f( 1.0f,  1.0f,  1.0f,  1.0f, -1.0f);
-    sgl_v3f_t2f( 1.0f,  1.0f, -1.0f, -1.0f, -1.0f);
-    sgl_end();
-}
-
-static void line(float sx, float sy, float ex, float ey)
-{
-    sgl_begin_lines();
-    sgl_c4b(255, 255, 0, 128);
-    sgl_v2f(sx, sy);
-    sgl_v2f(ex, ey);
-    sgl_end();
-}
+#include "tdg3/globals.h"
+#include "tdg3/init.h"
+#include "tdg3/shapes.h"
 
 static void draw_some_text()
 {
@@ -64,7 +10,6 @@ static void draw_some_text()
     uint32_t black = sfons_rgba(0, 0, 0, 255);
     uint32_t brown = sfons_rgba(192, 128, 0, 128);
     uint32_t blue  = sfons_rgba(0, 192, 255, 255);
-    fonsClearState(tdg::Globals::g_FontStashContext);
 
     float dpis = sapp_dpi_scale();
     sgl_defaults();
@@ -80,7 +25,7 @@ static void draw_some_text()
       fonsSetFont(fs, tdg::Globals::g_DefaultFont);
       fonsSetColor(fs, white);
       dx = 50*dpis; dy = 350*dpis;
-      line(dx-10*dpis,dy,dx+250*dpis,dy);
+      tdg::shapes::line(dx-10*dpis,dy,dx+250*dpis,dy);
       fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_TOP);
       dx = fonsDrawText(fs, dx,dy,"Top",NULL);
       dx += 10*dpis;
@@ -93,7 +38,7 @@ static void draw_some_text()
       fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_BOTTOM);
       fonsDrawText(fs, dx,dy,"Bottom",NULL);
       dx = 150*dpis; dy = 400*dpis;
-      line(dx,dy-30*dpis,dx,dy+80.0f*dpis);
+      tdg::shapes::line(dx,dy-30*dpis,dx,dy+80.0f*dpis);
       fonsSetAlign(fs, FONS_ALIGN_LEFT | FONS_ALIGN_BASELINE);
       fonsDrawText(fs, dx,dy,"Left",NULL);
       dy += 30*dpis;
@@ -120,34 +65,27 @@ static void draw_cubes(const float t) {
     sgl_translate(0.0f, 0.0f, -12.0f);
     sgl_rotate(sgl_rad(rot[0]), 1.0f, 0.0f, 0.0f);
     sgl_rotate(sgl_rad(rot[1]), 0.0f, 1.0f, 0.0f);
-    cube();
+    tdg::shapes::cube();
     sgl_push_matrix();
     sgl_translate(0.0f, 0.0f, 3.0f);
     sgl_scale(0.5f, 0.5f, 0.5f);
     sgl_rotate(-2.0f * sgl_rad(rot[0]), 1.0f, 0.0f, 0.0f);
     sgl_rotate(-2.0f * sgl_rad(rot[1]), 0.0f, 1.0f, 0.0f);
-    cube();
+    tdg::shapes::cube();
     sgl_push_matrix();
     sgl_translate(0.0f, 0.0f, 3.0f);
     sgl_scale(0.5f, 0.5f, 0.5f);
     sgl_rotate(-3.0f * sgl_rad(2*rot[0]), 1.0f, 0.0f, 0.0f);
     sgl_rotate(3.0f * sgl_rad(2*rot[1]), 0.0f, 0.0f, 1.0f);
-    cube();
+    tdg::shapes::cube();
     sgl_pop_matrix();
     sgl_pop_matrix();
-}
-
-static void draw_triangle() {
-    sgl_defaults();
-    sgl_begin_triangles();
-    sgl_v2f_c3b( 0.0f,  0.5f, 255, 0, 0);
-    sgl_v2f_c3b(-0.5f, -0.5f, 0, 0, 255);
-    sgl_v2f_c3b( 0.5f, -0.5f, 0, 255, 0);
-    sgl_end();
 }
 
 static void frame() {
 
+    // clear font state for frame
+    fonsClearState(tdg::Globals::g_FontStashContext);
     // prep
     const float aspect = sapp_widthf() / sapp_heightf();
     int width = sapp_width(), height = sapp_height();

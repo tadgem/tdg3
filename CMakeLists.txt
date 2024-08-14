@@ -69,12 +69,15 @@ endif()
 target_link_libraries(sokol PUBLIC cimgui)
 target_include_directories(sokol PUBLIC sokol ${CMAKE_CURRENT_SOURCE_DIR}/third-party/cimgui)
 
+file(GLOB_RECURSE TDG3_SRC_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" tdg3/*.cpp)
+file(GLOB_RECURSE TDG3_HEADER_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" tdg3/*.h)
+
 #=== EXECUTABLE: demo
 if(CMAKE_SYSTEM_NAME STREQUAL Windows)
-    add_executable(demo WIN32 demo.cpp init.h init.cpp globals.h)
+    add_executable(demo WIN32 demo.cpp ${TDG3_SRC_FILES} ${TDG3_HEADER_FILES})
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT demo)
 else()
-    add_executable(demo demo.cpp init.h init.cpp globals.h)
+    add_executable(demo demo.cpp ${TDG3_SRC_FILES} ${TDG3_HEADER_FILES})
 endif()
 target_link_libraries(demo sokol)
 target_include_directories(demo PUBLIC ${SOLOUD_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/third-party/sokol)
@@ -84,7 +87,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL Emscripten)
     add_compile_definitions("__EMSCRIPTEN__")
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     # use our own minimal shell.html
-    target_link_options(demo PRIVATE --shell-file ../sokol/shell.html)
+    target_link_options(demo PRIVATE --shell-file ../third-party/sokol/shell.html)
     # link with WebGL2
     target_link_options(demo PRIVATE -sUSE_WEBGL2=1)
     # WASM+JS size optimizations
