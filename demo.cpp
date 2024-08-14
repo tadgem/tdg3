@@ -52,8 +52,14 @@ static void init_sdl_mixer()
     }
 
     std::cout << "TDG3 : Initializing SDL Mixer" << std::endl;
+    std::cout << "TDG3 : Available Audio Devices" << std::endl;
+    for(int i = 0; i < SDL_GetNumAudioDevices(0); i++)
+    {
+      std::cout << "    - " << SDL_GetAudioDeviceName(i, 0) << std::endl;
+    }
+
     int chosen_device = Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 ) ;
-    Mix_Init(MIX_INIT_WAVPACK);
+    // Mix_Init(MIX_INIT_WAVPACK);
     if(chosen_device == -1 )
     {
       return;
@@ -62,6 +68,8 @@ static void init_sdl_mixer()
 
     std::cout << "TDG3 : Loading Pedro Audio" << std::endl;
     state.pedro_sample = Mix_LoadWAV( "../assets/sounds/pedro.wav" );
+    std::cout << "TDG3 : Pedro Audio Buffer Length : " << (float) (state.pedro_sample->alen / 1024) << " kB" << std::endl;
+    Mix_VolumeChunk(state.pedro_sample, 255);
 }
 
 static void init() {
