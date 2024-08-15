@@ -87,22 +87,22 @@ static void draw_cubes(const float t) {
     sgl_perspective(sgl_rad(45.0f), 1.0f, 0.1f, 100.0f);
 
     sgl_matrix_mode_modelview();
-    sgl_translate(0.0f, 0.0f, -12.0f);
+    tdg::shapes::draw_cube({0.0f, 0.0f, -12.0f}, {rot[0], rot[1], 0.f});
     sgl_rotate(sgl_rad(rot[0]), 1.0f, 0.0f, 0.0f);
     sgl_rotate(sgl_rad(rot[1]), 0.0f, 1.0f, 0.0f);
-    tdg::shapes::cube();
+    tdg::shapes::cube_shape();
     sgl_push_matrix();
     sgl_translate(0.0f, 0.0f, 3.0f);
     sgl_scale(0.5f, 0.5f, 0.5f);
     sgl_rotate(-2.0f * sgl_rad(rot[0]), 1.0f, 0.0f, 0.0f);
     sgl_rotate(-2.0f * sgl_rad(rot[1]), 0.0f, 1.0f, 0.0f);
-    tdg::shapes::cube();
+    tdg::shapes::cube_shape();
     sgl_push_matrix();
     sgl_translate(0.0f, 0.0f, 3.0f);
     sgl_scale(0.5f, 0.5f, 0.5f);
     sgl_rotate(-3.0f * sgl_rad(2*rot[0]), 1.0f, 0.0f, 0.0f);
     sgl_rotate(3.0f * sgl_rad(2*rot[1]), 0.0f, 0.0f, 1.0f);
-    tdg::shapes::cube();
+    tdg::shapes::cube_shape();
     sgl_pop_matrix();
     sgl_pop_matrix();
 }
@@ -136,7 +136,6 @@ static void frame() {
     // Do main loop stuff
     //draw_triangle();
     draw_cubes(t);
-    draw_some_text();
 
 
     ImGui::SetNextWindowPos({10, 10}, ImGuiCond_Once, {0,0 });
@@ -155,21 +154,22 @@ static void frame() {
     // Draw an animated rectangle that rotates and changes its colors.
     float time = sapp_frame_count() * sapp_frame_duration();
     float r = sinf(time)*0.5+0.5, g = cosf(time)*0.5+0.5;
-    sgp_set_color(r, g, 0.3f, 1.0f);
+    sgp_set_color(r, g, 0.3f, 0.5f);
     sgp_rotate_at(time, 0.0f, 0.0f);
-    sgp_draw_filled_rect(-0.5f, -0.5f, 1.0f, 1.0f);
+    sgp_draw_filled_rect(-0.1f, -0.1f, 1.0f, 1.0f);
 
     // end main loop
     auto pass = sg_pass {};
 
     pass.action = tdg::Globals::g_DefaultPass;
     pass.swapchain = sglue_swapchain();
+    draw_some_text();
 
     sg_begin_pass(&pass);
-    sfons_flush(tdg::Globals::g_FontStashContext);
-    sgl_draw();
     sgp_flush();
     sgp_end();
+    sfons_flush(tdg::Globals::g_FontStashContext);
+    sgl_draw();
     simgui_render();
     sg_end_pass();
     sg_commit();
