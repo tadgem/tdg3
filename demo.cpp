@@ -7,6 +7,7 @@
 #include "assimp/cimport.h"
 #include "assimp/mesh.h"
 #include "assimp/scene.h"
+#include "Jolt/Jolt.h"
 int mesh_vert_count = 0;
 static void init()
 {

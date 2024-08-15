@@ -1,7 +1,7 @@
 #include "init.h"
 #define TDG_INIT_IMPL
 #include "globals.h"
-
+#include "physics.h"
 static void init_sdl_mixer()
 {
   std::cout << "TDG3 : Initializing SDL Audio" << std::endl;
@@ -94,4 +94,6 @@ void tdg::engine_init::init() {
   pass_action.colors[0] = { SG_LOADACTION_CLEAR, SG_STOREACTION_STORE,  { 0.0f, 0.5f, 1.0f, 1.0 } };
   pass_action.depth = {SG_LOADACTION_CLEAR, SG_STOREACTION_STORE, 1.0f};
   tdg::Globals::g_DefaultPass = pass_action;
+
+  physics::init();
 }
